@@ -1,8 +1,7 @@
 package com.login.controller;
 
-import com.login.controller.model.CourseUser;
+import com.login.service.AuthService;
 import com.login.service.JwtUtilService;
-import com.login.service.LoginService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +18,11 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/courses/login")
-public class LoginController {
+@RequestMapping("/courses/auth")
+public class AuthController {
 
     @Autowired
-    private LoginService loginService;
+    private AuthService loginService;
 
     @Autowired
     private JwtUtilService jwtUtilService;
@@ -47,10 +46,11 @@ public class LoginController {
     @GetMapping("/token")
     public ResponseEntity<String> testToken() {
         UserDetails user = createUserDetails();
-        return ResponseEntity.ok(this.jwtUtilService.generateToken(user));
+        final String body = this.jwtUtilService.generateToken(user);
+        return ResponseEntity.ok(body);
     }
 
     private UserDetails createUserDetails() {
-        return new CourseUser("USER", "password", List.of(new SimpleGrantedAuthority("USER_ROLE")));
+        return new User("USER", "password", List.of(new SimpleGrantedAuthority("USER_ROLE")));
     }
 }
