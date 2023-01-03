@@ -18,7 +18,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/courses/auth")
+@RequestMapping("/auth")
 public class AuthController {
 
     @Autowired
@@ -28,9 +28,9 @@ public class AuthController {
     private JwtUtilService jwtUtilService;
 
     //    https://www.baeldung.com/spring-security-login-angular
-    @GetMapping()
-    public boolean login(@RequestBody User user) {
-        return loginService.isLoggedIn(user);
+    @GetMapping("/authenticated")
+    public boolean isLogged(@RequestBody User user) {
+        return loginService.isAuthenticated();
     }
 
     @GetMapping("/user")

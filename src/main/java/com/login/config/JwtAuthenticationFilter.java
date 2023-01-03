@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,9 +24,10 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class JWTAuthConfiguration extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
+    private static final String PREFIX_HEADER_TOKEN = "Bearer";
     private final UserDetailsService userDetailsService;
     private final JwtUtilService jwtUtilService;
 
@@ -35,23 +37,26 @@ public class JWTAuthConfiguration extends OncePerRequestFilter {
     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        final String auhtHeader = request.getHeader(AUTHORIZATION);
-        final String jwtToken;
+        final String authHeader = request.getHeader(AUTHORIZATION);
 
         // If the header is null or does not contain the Bearer, it continues doing nothing
-        if (StringUtils.isEmpty(auhtHeader) || !StringUtils.startsWith(auhtHeader, "Bearer")) {
+        if (StringUtils.isEmpty(authHeader) || !StringUtils.startsWith(authHeader, PREFIX_HEADER_TOKEN)) {
             filterChain.doFilter(request, response);
         }
-        jwtToken = auhtHeader.substring(7);
+        final String jwtToken = authHeader.substring(PREFIX_HEADER_TOKEN.length() + 1);
         final String userEmail = jwtUtilService.getUsername(jwtToken);
 
-        if (StringUtils.isNotBlank(userEmail) && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (StringUtils.isNotBlank(userEmail)) {
             final UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
-            final boolean isTokenValid = false;
-            if (isTokenValid) {
+
+            if (Boolean.TRUE.equals(jwtUtilService.validateToken(jwtToken, userDetails))) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                final SecurityContext context = SecurityContextHolder.getContext();
+
+                if (context.getAuthentication() == null) {
+                    context.setAuthentication(authToken);
+                }
                 log.info("authenticated user:{}", userEmail);
             }
         }

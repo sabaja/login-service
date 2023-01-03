@@ -34,10 +34,8 @@ class JwtUtilServiceImplTest {
     private UserDetails user;
     private String jwtToken;
 
-
     @Mock
     private Jwts jwts;
-
 
     @BeforeEach
     public void setUp() {
