@@ -1,5 +1,6 @@
 package com.login.config;
 
+import com.login.service.AuthServiceImpl;
 import com.login.service.JwtUtilService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,7 +13,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
     private static final String PREFIX_HEADER_TOKEN = "Bearer";
-    private final UserDetailsService userDetailsService;
+    private final AuthServiceImpl authService;
     private final JwtUtilService jwtUtilService;
 
     /*
@@ -47,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String userEmail = jwtUtilService.getUsername(jwtToken);
 
         if (StringUtils.isNotBlank(userEmail)) {
-            final UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+            final UserDetails userDetails = authService.loadUserByUsername(userEmail);
 
             if (Boolean.TRUE.equals(jwtUtilService.validateToken(jwtToken, userDetails))) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

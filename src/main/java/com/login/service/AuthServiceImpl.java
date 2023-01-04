@@ -25,25 +25,14 @@ import java.util.stream.Collectors;
 @Service
 public class AuthServiceImpl implements AuthService, UserDetailsService {
 
-    private static final String USERNAME_CANNOT_BE_NULL_ERROR_MESSAGE = "Username cannot be null";
-    private static final String USER_MUST_BE_NOT_EMPTY_ERROR_MESSAGE = "User must be not empty";
-    private static final String USER_ALREADY_EXISTS_ERROR_MESSAGE = "User already exists";
-    private static final String PASSWORD_CANNOT_BE_EMPTY_ERROR_MESSAGE = "Password cannot be empty";
-    private static final String REQUEST_IS_NULL_ERROR_MESSAGE = "Request is null";
-    private static final String ROLES_NOT_FOUND_ERROR_MESSAGE = "Roles not found";
+    public static final String USERNAME_CANNOT_BE_NULL_ERROR_MESSAGE = "Username cannot be null";
+    public static final String USER_MUST_BE_NOT_EMPTY_ERROR_MESSAGE = "User must be not empty";
+    public static final String USER_ALREADY_EXISTS_ERROR_MESSAGE = "User already exists";
+    public static final String PASSWORD_CANNOT_BE_EMPTY_ERROR_MESSAGE = "Password cannot be empty";
+    public static final String REQUEST_IS_NULL_ERROR_MESSAGE = "Request is null";
+    public static final String ROLES_NOT_FOUND_ERROR_MESSAGE = "Roles not found";
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
-
-    private static List<String> getRoles(Request request) {
-        return Optional.ofNullable(request.getRoles())
-                .orElseThrow(() -> new UserException(ROLES_NOT_FOUND_ERROR_MESSAGE));
-    }
-
-    private static String getPassword(Request request) {
-        return Optional.ofNullable(request.getUserPwd())
-                .filter(StringUtils::isNotBlank)
-                .orElseThrow(() -> new UserException(PASSWORD_CANNOT_BE_EMPTY_ERROR_MESSAGE));
-    }
 
     @Override
     public boolean isAuthenticated() {
@@ -53,7 +42,7 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        if (username == null) {
+        if (StringUtils.isEmpty(username)) {
             throw new UserException(USERNAME_CANNOT_BE_NULL_ERROR_MESSAGE);
         }
 
@@ -96,5 +85,16 @@ public class AuthServiceImpl implements AuthService, UserDetailsService {
         }).collect(Collectors.toSet()));
 
         userRepository.save(user);
+    }
+
+    private List<String> getRoles(Request request) {
+        return Optional.ofNullable(request.getRoles())
+                .orElseThrow(() -> new UserException(ROLES_NOT_FOUND_ERROR_MESSAGE));
+    }
+
+    private String getPassword(Request request) {
+        return Optional.ofNullable(request.getUserPwd())
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new UserException(PASSWORD_CANNOT_BE_EMPTY_ERROR_MESSAGE));
     }
 }

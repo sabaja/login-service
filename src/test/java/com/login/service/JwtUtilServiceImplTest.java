@@ -79,7 +79,6 @@ class JwtUtilServiceImplTest {
     }
 
     @Test
-    @DisplayName("expirationDate")
     void shouldExtractExpirationDate() {
         //given
         //when
