@@ -7,16 +7,18 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table
-public class UserRole {
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"type"})})
+public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @Column
-    private String role;
-
-    @JoinColumn(name = "user_id")
+    private String type;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinTable(name = "users_roles",
+            joinColumns = @JoinColumn(name = "role_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
     private User user;
 }

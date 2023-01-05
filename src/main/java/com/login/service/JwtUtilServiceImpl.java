@@ -1,21 +1,34 @@
 package com.login.service;
 
+import com.login.controller.model.Request;
+import com.login.entity.Role;
+import com.login.entity.User;
 import com.login.exception.JwtTokenMalformedException;
 import com.login.exception.JwtTokenMissingException;
 import com.login.exception.UserException;
+import com.login.repository.UserRepository;
 import io.jsonwebtoken.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@RequiredArgsConstructor
+@Service
 public class JwtUtilServiceImpl implements JwtUtilService {
 
     public static final String EXPIRED_JWT_TOKEN_ERROR_MESSAGE = "Expired JWT token";
@@ -23,22 +36,19 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     public static final String JWT_CLAIMS_STRING_IS_EMPTY_ERROR_MESSAGE = "JWT claims string is empty.";
     public static final String UNSUPPORTED_JWT_TOKEN_ERROR_MESSAGE = "Unsupported JWT token";
     public static final String USER_IS_NULL_ERROR_MESSAGE = "User is null";
+    public static final String USERNAME_CANNOT_BE_NULL_ERROR_MESSAGE = "Username cannot be null";
+    public static final String USER_MUST_BE_NOT_EMPTY_ERROR_MESSAGE = "User must be not empty";
+    public static final String USER_ALREADY_EXISTS_ERROR_MESSAGE = "User already exists";
+    public static final String PASSWORD_CANNOT_BE_EMPTY_ERROR_MESSAGE = "Password cannot be empty";
+    public static final String REQUEST_IS_NULL_ERROR_MESSAGE = "Request is null";
+    public static final String ROLES_NOT_FOUND_ERROR_MESSAGE = "Roles not found";
     private static final String JWT_SIGNING_KEY = "c2VjcmV0cGFzc3dvcmQ=";
     private static final long TOKEN_VALIDITY = 1000L * 60L * 60L * 10L;
-    private final byte[] encodedJwtSigningKey;
+    private final byte[] encodedJwtSigningKey = Base64.getDecoder().decode(JWT_SIGNING_KEY);
 
-    public JwtUtilServiceImpl() {
-        this.encodedJwtSigningKey = Base64.getDecoder().decode(JWT_SIGNING_KEY);
-    }
+    private final PasswordEncoder passwordEncoder;
 
-    /**
-     * @deprecated Use {@link #getUsername(String)} method instead.
-     */
-    @Override
-    @Deprecated(since = "Use getUsername", forRemoval = true)
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
+    private final UserRepository userRepository;
 
     @Override
     public String getUsername(final String token) {
@@ -87,6 +97,59 @@ public class JwtUtilServiceImpl implements JwtUtilService {
         return (username.equals(userDetails.getUsername()));
     }
 
+    @Override
+    public boolean isAuthenticated() {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return null != authentication && !("anonymousUser").equals(authentication.getName());
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        if (StringUtils.isEmpty(username)) {
+            throw new UserException(USERNAME_CANNOT_BE_NULL_ERROR_MESSAGE);
+        }
+
+        final User user = userRepository.findByUserName(username).orElseThrow(() -> new UsernameNotFoundException("User " + username + " not found"));
+        List<Role> roles = user.getRoles()
+                .stream()
+                .toList();
+        final List<SimpleGrantedAuthority> grantedAuthorities = roles.stream()
+                .map(r -> new SimpleGrantedAuthority(r.getType())
+                ).toList();
+
+        return new org.springframework.security.core.userdetails.User(username, user.getUserPass(), grantedAuthorities);
+    }
+
+    @Override
+    @Transactional
+    public void saveUser(Request request) {
+
+        if (request == null) {
+            throw new UserException(REQUEST_IS_NULL_ERROR_MESSAGE);
+        }
+
+        final String userName = Optional.of(request)
+                .map(Request::getUserName)
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new UserException(USER_MUST_BE_NOT_EMPTY_ERROR_MESSAGE));
+
+        if (userRepository.findByUserName(userName).isPresent()) {
+            throw new UserException(USER_ALREADY_EXISTS_ERROR_MESSAGE);
+        }
+
+        User user = new User();
+        user.setUserName(userName);
+        user.setUserPass(passwordEncoder.encode(getPassword(request)));
+
+        user.setRoles(getRoles(request).stream().map(r -> {
+            Role ur = new Role();
+            ur.setType(r);
+            return ur;
+        }).collect(Collectors.toSet()));
+
+        userRepository.save(user);
+    }
+
     private void validateUserDetails(UserDetails userDetails) {
         if (Objects.isNull(userDetails)) {
             throw new UserException(USER_IS_NULL_ERROR_MESSAGE);
@@ -117,11 +180,6 @@ public class JwtUtilServiceImpl implements JwtUtilService {
                 .getBody();
     }
 
-    private Boolean isTokenExpired(String token) {
-        final LocalDateTime localDateTime = extractExpirationDate(token);
-        return Objects.isNull(localDateTime) ? Boolean.TRUE : localDateTime.isBefore(LocalDateTime.now());
-    }
-
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)
@@ -138,5 +196,14 @@ public class JwtUtilServiceImpl implements JwtUtilService {
                 .toLocalDateTime();
     }
 
+    private List<String> getRoles(Request request) {
+        return Optional.ofNullable(request.getRoles())
+                .orElseThrow(() -> new UserException(ROLES_NOT_FOUND_ERROR_MESSAGE));
+    }
 
+    private String getPassword(Request request) {
+        return Optional.ofNullable(request.getUserPwd())
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new UserException(PASSWORD_CANNOT_BE_EMPTY_ERROR_MESSAGE));
+    }
 }

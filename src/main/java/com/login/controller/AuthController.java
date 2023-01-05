@@ -1,6 +1,5 @@
 package com.login.controller;
 
-import com.login.service.AuthService;
 import com.login.service.JwtUtilService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +20,6 @@ import java.util.List;
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    private AuthService loginService;
 
     @Autowired
     private JwtUtilService jwtUtilService;
@@ -30,7 +27,7 @@ public class AuthController {
     //    https://www.baeldung.com/spring-security-login-angular
     @GetMapping("/authenticated")
     public boolean isLogged(@RequestBody User user) {
-        return loginService.isAuthenticated();
+        return jwtUtilService.isAuthenticated();
     }
 
     @GetMapping("/user")

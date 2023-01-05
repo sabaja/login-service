@@ -9,7 +9,7 @@ import java.util.Set;
 
 @Getter
 @Setter
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = {@UniqueConstraint(columnNames = {"userName", "userPass"})})
 @Entity
 public class User {
 
@@ -23,6 +23,6 @@ public class User {
     @Column
     private String userPass;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<UserRole> userRoles = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Role> roles = new HashSet<>();
 }
