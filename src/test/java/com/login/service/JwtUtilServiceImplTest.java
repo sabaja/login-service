@@ -232,11 +232,11 @@ class JwtUtilServiceImplTest {
     @NotNull
     private Optional<com.login.entity.User> createUser() {
         com.login.entity.User user = new com.login.entity.User();
-        user.setId(1);
+        user.setId(1L);
         user.setUserName(USER);
         user.setUserPass(PASS);
         Role role = new Role();
-        role.setId(1);
+        role.setId(1L);
         role.setType(USER_ROLE);
         role.setUser(user);
         final Set<Role> roles = new HashSet<>();

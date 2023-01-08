@@ -1,5 +1,6 @@
 package com.login.config;
 
+import com.login.exception.JwtTokenMissingException;
 import com.login.service.JwtUtilService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -43,8 +44,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader(AUTHORIZATION);
 
         // If the header is null or does not contain the Bearer, it continues doing nothing
+//        if (StringUtils.isEmpty(authHeader) || !StringUtils.startsWith(authHeader, PREFIX_HEADER_TOKEN)) {
+//            filterChain.doFilter(request, response);
+//            return;
+//        }
         if (StringUtils.isEmpty(authHeader) || !StringUtils.startsWith(authHeader, PREFIX_HEADER_TOKEN)) {
-            filterChain.doFilter(request, response);
+            throw new JwtTokenMissingException("No JWT token found in the request headers");
         }
         final String jwtToken = authHeader.substring(PREFIX_HEADER_TOKEN.length() + 1);
         final String userEmail = jwtUtilService.getUsername(jwtToken);

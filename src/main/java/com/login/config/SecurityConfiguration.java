@@ -16,8 +16,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 
 @Configuration
 @EnableWebSecurity
@@ -30,21 +30,19 @@ class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfiguration(@Lazy JwtUtilService userDetailsService, ApiAuthenticationEntryPoint authenticationEntryPoint, JwtAuthenticationFilter jwtAuthenticationFilter) {
+    private final CustomRoleHierarchy roleHierarchy;
+
+    public SecurityConfiguration(@Lazy JwtUtilService userDetailsService, ApiAuthenticationEntryPoint authenticationEntryPoint, JwtAuthenticationFilter jwtAuthenticationFilter, CustomRoleHierarchy roleHierarchy) {
         this.userDetailsService = userDetailsService;
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.roleHierarchy = roleHierarchy;
     }
     /*
-     https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
      https://docs.spring.io/spring-security/reference/servlet/architecture.html
+     https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
      https://www.bezkoder.com/websecurityconfigureradapter-deprecated-spring-boot/
     */
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
 
     @Bean
     public RegistrationBean jwtAuthFilterRegister(JwtAuthenticationFilter filter) {
@@ -55,9 +53,11 @@ class SecurityConfiguration {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(authorize ->
+
+        http
+                .authorizeHttpRequests(authorize ->
                         authorize
-                                .requestMatchers("/h2-console/**", "/index.html", "/", "**/login")
+                                .requestMatchers("/h2-console/**", "/index.html", "/", "**/signin", "**/signup")
                                 .permitAll()
                                 .anyRequest().authenticated()
                 )
@@ -84,7 +84,20 @@ class SecurityConfiguration {
     }
 
     @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    @Bean
+    public DefaultWebSecurityExpressionHandler expressionHandler() {
+        DefaultWebSecurityExpressionHandler expressionHandler = new DefaultWebSecurityExpressionHandler();
+        expressionHandler.setRoleHierarchy(roleHierarchy);
+        return expressionHandler;
+    }
 }
+
