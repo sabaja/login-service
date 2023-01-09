@@ -52,13 +52,12 @@ class SecurityConfiguration {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
                 .authorizeHttpRequests(authorize ->
                         authorize
-                                .requestMatchers("/h2-console/**", "/index.html", "/", "**/signin", "**/signup")
-                                .permitAll()
+                                .requestMatchers("/h2-console/**", "/index.html", "/", "/auth/signin", "/auth/signup").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .csrf().disable()
