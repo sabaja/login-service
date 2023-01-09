@@ -24,6 +24,9 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+        if (authException != null && StringUtils.isNoneEmpty(authException.getMessage())) {
+            log.error(authException.getMessage());
+        }
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, UNAUTHORIZED_MESSAGE_ERROR);
     }
 }
