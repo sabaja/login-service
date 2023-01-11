@@ -21,6 +21,13 @@ import java.io.IOException;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
+
+/**
+ * {@code JwtAuthenticationFilter} viene invocata nel momento venga richiesta una risorsa protetta.
+ * Inoltre la classe {@link  OncePerRequestFilter} estesa da {@code JwtAuthenticationFilter}  garantisce un'istanza unica 
+ * per una singola esecuzione per invio di richiesta, su qualsiasi servlet container. 
+ * A partire da Servlet 3.0, un filtro può essere richiamato come parte di un invio REQUEST o ASYNC che si verifica in thread separati.
+ */
 @Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
