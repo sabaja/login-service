@@ -57,7 +57,13 @@ public class JwtUtilServiceImpl implements JwtUtilService {
                     .setSigningKey(JWT_SIGNING_KEY)
                     .parseClaimsJws(token)
                     .getBody();
-            return body.getSubject();
+
+            final String subject = Optional.ofNullable(body.getSubject())
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> new JwtTokenMissingException("Missing Subject"));
+//            org.springframework.security.core.userdetails.User user = (User) subject;
+
+            return subject;
         } catch (Exception e) {
             log.error(e.getMessage() + " => " + e);
             throw new UserException(e.getMessage() + " => " + e);
@@ -109,7 +115,8 @@ public class JwtUtilServiceImpl implements JwtUtilService {
             throw new UserException(USERNAME_CANNOT_BE_NULL_ERROR_MESSAGE);
         }
 
-        final User user = userRepository.findByUserName(username).orElseThrow(() -> new UsernameNotFoundException("User " + username + " not found"));
+        final User user = userRepository.findByUserName(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User " + username + " not found"));
         List<Role> roles = user.getRoles()
                 .stream()
                 .toList();
@@ -160,7 +167,8 @@ public class JwtUtilServiceImpl implements JwtUtilService {
         }
     }
 
-    private void validateToken(final String token) {
+    @Override
+    public void validateToken(final String token) {
         try {
             Jwts.parser().setSigningKey(encodedJwtSigningKey).parseClaimsJws(token);
         } catch (SignatureException | MalformedJwtException ex) {

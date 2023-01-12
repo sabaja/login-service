@@ -63,6 +63,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throw new JwtTokenMissingException("No JWT token found in the request headers");
         }
         final String jwtToken = authHeader.substring(PREFIX_HEADER_TOKEN.length() + 1);
+        jwtUtilService.validateToken(jwtToken);
         final String userEmail = jwtUtilService.getUsername(jwtToken);
 
         if (StringUtils.isNotBlank(userEmail)) {
