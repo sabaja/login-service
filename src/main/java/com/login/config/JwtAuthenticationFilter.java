@@ -8,35 +8,44 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 
 /**
  * {@code JwtAuthenticationFilter} viene invocata nel momento venga richiesta una risorsa protetta.
- * Inoltre la classe {@link  OncePerRequestFilter} estesa da {@code JwtAuthenticationFilter}  garantisce un'istanza unica 
- * per una singola esecuzione per invio di richiesta, su qualsiasi servlet container. 
+ * Inoltre la classe {@link  OncePerRequestFilter} estesa da {@code JwtAuthenticationFilter}  garantisce un'istanza unica
+ * per una singola esecuzione per invio di richiesta, su qualsiasi servlet container.
  * A partire da Servlet 3.0, un filtro può essere richiamato come parte di un invio REQUEST o ASYNC che si verifica in thread separati.
  */
 @Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-
     private static final String PREFIX_HEADER_TOKEN = "Bearer";
 
-
     private final JwtUtilService jwtUtilService;
+
+    private RequestMatcher requestMatcher;
+
+    @Value("#{${secured.requests.ignored}}")
+    private List<String> publicEndPoints;
 
     public JwtAuthenticationFilter(@Lazy JwtUtilService jwtUtilService) {
         this.jwtUtilService = jwtUtilService;
@@ -50,11 +59,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String authHeader = request.getHeader(AUTHORIZATION);
 
-        // If the header is null or does not contain the Bearer, it continues doing nothing
-//        if (StringUtils.isEmpty(authHeader) || !StringUtils.startsWith(authHeader, PREFIX_HEADER_TOKEN)) {
-//            filterChain.doFilter(request, response);
-//            return;
-//        }
         if (StringUtils.isEmpty(authHeader) || !StringUtils.startsWith(authHeader, PREFIX_HEADER_TOKEN)) {
             throw new JwtTokenMissingException("No JWT token found in the request headers");
         }
@@ -76,5 +80,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+
+    //    https://stackoverflow.com/questions/62065673/with-spring-security-how-do-i-determine-if-the-current-api-request-should-be-aut
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        ignorePatterns(publicEndPoints);
+        return requestMatcher.matches(request);
+    }
+
+    private void ignorePatterns(List<String> patterns) {
+        List<RequestMatcher> matchers = new ArrayList<>();
+        for (String pattern : patterns) {
+            matchers.add(new AntPathRequestMatcher(pattern, null));
+        }
+        requestMatcher = new OrRequestMatcher(matchers);
     }
 }

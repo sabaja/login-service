@@ -73,7 +73,8 @@ class SecurityConfiguration {
                 .cors().disable()
                 .headers().frameOptions().disable().and()
                 .httpBasic().disable()
-                .formLogin().disable();
+                .formLogin().disable()
+                .logout().disable();
 
         http.httpBasic().disable().exceptionHandling()
                 .authenticationEntryPoint(authenticationEntryPoint).and().sessionManagement()

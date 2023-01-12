@@ -4,10 +4,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Entity
-@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"type"})})
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,4 +22,7 @@ public class Role {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private User user;
+
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
 }

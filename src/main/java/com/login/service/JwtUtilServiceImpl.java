@@ -137,14 +137,18 @@ public class JwtUtilServiceImpl implements JwtUtilService {
             throw new UserException(USER_ALREADY_EXISTS_ERROR_MESSAGE);
         }
 
+        final LocalDateTime now = LocalDateTime.now();
         User user = new User();
         user.setUserName(userName);
         user.setUserPass(passwordEncoder.encode(getPassword(request)));
+        user.setCreateTime(now);
 
         user.setRoles(getRoles(request).stream().map(r -> {
-            Role ur = new Role();
-            ur.setType(r);
-            return ur;
+            Role role = new Role();
+            role.setType(r);
+            role.setUser(user);
+            role.setCreateTime(now);
+            return role;
         }).collect(Collectors.toSet()));
 
         userRepository.save(user);
