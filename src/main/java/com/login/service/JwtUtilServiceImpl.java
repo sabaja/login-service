@@ -110,6 +110,7 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     }
 
     @Override
+    @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         if (StringUtils.isEmpty(username)) {
             throw new UserException(USERNAME_CANNOT_BE_NULL_ERROR_MESSAGE);
