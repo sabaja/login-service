@@ -58,12 +58,9 @@ public class JwtUtilServiceImpl implements JwtUtilService {
                     .parseClaimsJws(token)
                     .getBody();
 
-            final String subject = Optional.ofNullable(body.getSubject())
+            return Optional.ofNullable(body.getSubject())
                     .filter(StringUtils::isNotBlank)
                     .orElseThrow(() -> new JwtTokenMissingException("Missing Subject"));
-//            org.springframework.security.core.userdetails.User user = (User) subject;
-
-            return subject;
         } catch (Exception e) {
             log.error(e.getMessage() + " => " + e);
             throw new UserException(e.getMessage() + " => " + e);
@@ -89,10 +86,10 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     }
 
     @Override
-    public String generateToken(Authentication authentication) {
-        final String username = String.valueOf(authentication.getPrincipal());
-        final Claims claims = Jwts.claims().setSubject(username);
-        return createToken(claims, username);
+    public String generateToken(final Authentication authentication, UserDetails userDetails) {
+        final String principal = String.valueOf(authentication.getPrincipal());
+        final Claims claims = Jwts.claims().setSubject(principal);
+        return createToken(claims, userDetails.getUsername());
     }
 
     @Override
@@ -101,6 +98,21 @@ public class JwtUtilServiceImpl implements JwtUtilService {
         validateUserDetails(userDetails);
         final String username = getUsername(token);
         return (username.equals(userDetails.getUsername()));
+    }
+
+    @Override
+    public void validateToken(final String token) {
+        try {
+            Jwts.parser().setSigningKey(encodedJwtSigningKey).parseClaimsJws(token);
+        } catch (SignatureException | MalformedJwtException ex) {
+            throw new JwtTokenMalformedException(INVALID_JWT_TOKEN_ERROR_MESSAGE);
+        } catch (ExpiredJwtException ex) {
+            throw new JwtTokenMalformedException(EXPIRED_JWT_TOKEN_ERROR_MESSAGE);
+        } catch (UnsupportedJwtException ex) {
+            throw new JwtTokenMalformedException(UNSUPPORTED_JWT_TOKEN_ERROR_MESSAGE);
+        } catch (IllegalArgumentException ex) {
+            throw new JwtTokenMissingException(JWT_CLAIMS_STRING_IS_EMPTY_ERROR_MESSAGE);
+        }
     }
 
     @Override
@@ -165,21 +177,6 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     private void validateUserDetails(UserDetails userDetails) {
         if (Objects.isNull(userDetails)) {
             throw new UserException(USER_IS_NULL_ERROR_MESSAGE);
-        }
-    }
-
-    @Override
-    public void validateToken(final String token) {
-        try {
-            Jwts.parser().setSigningKey(encodedJwtSigningKey).parseClaimsJws(token);
-        } catch (SignatureException | MalformedJwtException ex) {
-            throw new JwtTokenMalformedException(INVALID_JWT_TOKEN_ERROR_MESSAGE);
-        } catch (ExpiredJwtException ex) {
-            throw new JwtTokenMalformedException(EXPIRED_JWT_TOKEN_ERROR_MESSAGE);
-        } catch (UnsupportedJwtException ex) {
-            throw new JwtTokenMalformedException(UNSUPPORTED_JWT_TOKEN_ERROR_MESSAGE);
-        } catch (IllegalArgumentException ex) {
-            throw new JwtTokenMissingException(JWT_CLAIMS_STRING_IS_EMPTY_ERROR_MESSAGE);
         }
     }
 

@@ -64,10 +64,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         final String jwtToken = authHeader.substring(PREFIX_HEADER_TOKEN.length() + 1);
         jwtUtilService.validateToken(jwtToken);
-        final String userEmail = jwtUtilService.getUsername(jwtToken);
+        final String userId = jwtUtilService.getUsername(jwtToken);
 
-        if (StringUtils.isNotBlank(userEmail)) {
-            final UserDetails userDetails = jwtUtilService.loadUserByUsername(userEmail);
+        if (StringUtils.isNotBlank(userId)) {
+            final UserDetails userDetails = jwtUtilService.loadUserByUsername(userId);
 
             if (Boolean.TRUE.equals(jwtUtilService.validateToken(jwtToken, userDetails))) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -77,7 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (context.getAuthentication() == null) {
                     context.setAuthentication(authToken);
                 }
-                log.info("authenticated user:{}", userEmail);
+                log.info("The user [{}] has been authenticated", userId);
             }
         }
         filterChain.doFilter(request, response);

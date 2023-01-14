@@ -59,7 +59,7 @@ class JwtUtilServiceImplTest {
         this.passwordEncoder = mock(PasswordEncoder.class);
         this.userRepository = mock(UserRepository.class);
         this.jwtUtilService = new JwtUtilServiceImpl(this.passwordEncoder, this.userRepository);
-        this.jwtToken = jwtUtilService.generateToken(authentication);
+        this.jwtToken = jwtUtilService.generateToken(authentication, user);
         SecurityContextHolder.clearContext();
     }
 

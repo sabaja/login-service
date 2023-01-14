@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         final UserDetails userDetails = jwtUtilService.loadUserByUsername(request.getUserName());
-        final String token = jwtUtilService.generateToken(authentication);
+        final String token = jwtUtilService.generateToken(authentication, userDetails);
         final List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
