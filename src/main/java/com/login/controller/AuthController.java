@@ -5,7 +5,6 @@ import com.login.controller.model.Response;
 import com.login.service.AuthService;
 import com.login.service.JwtUtilService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
@@ -15,6 +14,7 @@ import java.security.Principal;
 
 @Slf4j
 @RestController
+@CrossOrigin(value = "http://localhost:4200")
 @RequestMapping("/auth")
 public class AuthController {
 
@@ -41,8 +41,8 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody Request request) {
+    public ResponseEntity<Boolean> signup(@RequestBody Request request) {
         this.authService.signup(request);
-        return ResponseEntity.ok(Strings.EMPTY);
+        return ResponseEntity.ok(Boolean.TRUE);
     }
 }
