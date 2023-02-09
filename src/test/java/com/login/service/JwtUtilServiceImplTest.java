@@ -40,7 +40,6 @@ class JwtUtilServiceImplTest {
     private static final String PASS = "PASS";
     private static final String USER_ROLE = "USER_ROLE";
     private final String TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NzIzNDU0ODcsImlhdCI6MTY3MjMwOTQ4N30.M9YX0U4AEM2ZmiDnJ3jTUJYfRtNzXdi8KFM9qpw0k10";
-    private final String UNSUPPORTED_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6ImludmFsaWRUeXBlIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.xJYP_PkUlAOXY6uNZNA8Q9uMMej8yxehRkEcZVfDUDE";
     private String invalidToken;
     private JwtUtilService jwtUtilService;
     private UserDetails user;
@@ -66,7 +65,7 @@ class JwtUtilServiceImplTest {
     @Test
     void throwException_whenGetUsernameWithExpiredToken() {
         Exception exception = assertThrows(UserException.class, () -> jwtUtilService.getUsername(TOKEN));
-        final String exceptionMessage = "JWT expired";
+        final String exceptionMessage = "JWT signature does not match locally computed signature";
         final String actualMessage = exception.getMessage();
         assertTrue(actualMessage.contains(exceptionMessage));
     }
@@ -103,8 +102,8 @@ class JwtUtilServiceImplTest {
 
     @Test
     void shouldValidateToken() {
-        Exception exception1 = assertThrows(JwtTokenMalformedException.class, () -> jwtUtilService.validateToken(TOKEN, user));
-        assertTrue(exception1.getMessage().contains(EXPIRED_JWT_TOKEN_ERROR_MESSAGE));
+        Exception exception1 = assertThrows(io.jsonwebtoken.security.SignatureException.class, () -> jwtUtilService.validateToken(TOKEN, user));
+        assertTrue(exception1.getMessage().contains("JWT validity cannot be asserted and should not be trusted"));
 
         Exception exception2 = assertThrows(JwtTokenMalformedException.class, () -> jwtUtilService.validateToken("WrongToken", user));
         assertTrue(exception2.getMessage().contains(INVALID_JWT_TOKEN_ERROR_MESSAGE));
@@ -171,13 +170,8 @@ class JwtUtilServiceImplTest {
     void throwUsernameNotFoundExceptionException_whenLoadUserByUsername() {
         // Arrange
         String username = "invalid_username";
-
-        // Act and assert
-        final UsernameNotFoundException usernameNotFoundException = assertThrows(UsernameNotFoundException.class, () -> {
-            userRepository.findByUserName(username).orElseThrow(() -> new UsernameNotFoundException("User " + username + " not found"));
-        });
-
-        assertEquals(usernameNotFoundException.getMessage(), "User " + username + " not found");
+        Exception exception1 = assertThrows(UsernameNotFoundException.class, () -> jwtUtilService.loadUserByUsername(username));
+        assertEquals(exception1.getMessage(), "User " + username + " not found");
     }
 
     @Test

@@ -8,6 +8,8 @@ import com.login.exception.JwtTokenMissingException;
 import com.login.exception.UserException;
 import com.login.repository.UserRepository;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Key;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -42,10 +45,8 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     public static final String PASSWORD_CANNOT_BE_EMPTY_ERROR_MESSAGE = "Password cannot be empty";
     public static final String REQUEST_IS_NULL_ERROR_MESSAGE = "Request is null";
     public static final String ROLES_NOT_FOUND_ERROR_MESSAGE = "Roles not found";
-    private static final String JWT_SIGNING_KEY = "c2VjcmV0cGFzc3dvcmQ=";
+    private static final String JWT_SIGNING_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
     private static final long TOKEN_VALIDITY = 1000L * 60L * 60L * 10L;
-    private final byte[] encodedJwtSigningKey = Base64.getDecoder().decode(JWT_SIGNING_KEY);
-
     private final PasswordEncoder passwordEncoder;
 
     private final UserRepository userRepository;
@@ -53,8 +54,10 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     @Override
     public String getUsername(final String token) {
         try {
-            Claims body = Jwts.parser()
-                    .setSigningKey(JWT_SIGNING_KEY)
+            Claims body = Jwts.
+                    parserBuilder()
+                    .setSigningKey(getSignInKey())
+                    .build()
                     .parseClaimsJws(token)
                     .getBody();
 
@@ -103,8 +106,12 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     @Override
     public void validateToken(final String token) {
         try {
-            Jwts.parser().setSigningKey(encodedJwtSigningKey).parseClaimsJws(token);
-        } catch (SignatureException | MalformedJwtException ex) {
+            Jwts
+                    .parserBuilder()
+                    .setSigningKey(getSignInKey())
+                    .build()
+                    .parseClaimsJws(token);
+        } catch (MalformedJwtException ex) {
             throw new JwtTokenMalformedException(INVALID_JWT_TOKEN_ERROR_MESSAGE);
         } catch (ExpiredJwtException ex) {
             throw new JwtTokenMalformedException(EXPIRED_JWT_TOKEN_ERROR_MESSAGE);
@@ -184,8 +191,10 @@ public class JwtUtilServiceImpl implements JwtUtilService {
         https://stackoverflow.com/questions/50691187/spring-security-sessions-without-cookies/50857373#50857373
     */
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(encodedJwtSigningKey)
+        return Jwts
+                .parserBuilder()
+                .setSigningKey(getSignInKey())
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
@@ -196,7 +205,7 @@ public class JwtUtilServiceImpl implements JwtUtilService {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY))
-                .signWith(SignatureAlgorithm.HS512, encodedJwtSigningKey)
+                .signWith(getSignInKey())
                 .compact();
     }
 
@@ -215,5 +224,10 @@ public class JwtUtilServiceImpl implements JwtUtilService {
         return Optional.ofNullable(request.getUserPwd())
                 .filter(StringUtils::isNotBlank)
                 .orElseThrow(() -> new UserException(PASSWORD_CANNOT_BE_EMPTY_ERROR_MESSAGE));
+    }
+
+    private Key getSignInKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(JWT_SIGNING_KEY);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
