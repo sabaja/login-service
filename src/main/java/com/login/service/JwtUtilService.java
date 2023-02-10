@@ -21,9 +21,9 @@ public interface JwtUtilService extends UserDetailsService {
 
     String generateToken(final Authentication authentication, UserDetails userDetails);
 
-    Boolean validateToken(String token, UserDetails userDetails);
+    Boolean isTokenValid(String token, UserDetails userDetails);
 
-    void validateToken(String token);
+    void isTokenValid(String token);
 
     boolean isAuthenticated();
 

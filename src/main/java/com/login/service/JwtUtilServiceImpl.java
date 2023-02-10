@@ -45,7 +45,9 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     public static final String PASSWORD_CANNOT_BE_EMPTY_ERROR_MESSAGE = "Password cannot be empty";
     public static final String REQUEST_IS_NULL_ERROR_MESSAGE = "Request is null";
     public static final String ROLES_NOT_FOUND_ERROR_MESSAGE = "Roles not found";
-    private static final String JWT_SIGNING_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+
+    // https://www.allkeysgenerator.com/Random/Security-Encryption-Key-Generator.aspx 512-bit + hex
+    private static final String JWT_SIGNING_KEY = "5A7134743777217A25432A462D4A404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970337336763979244226452948404D63516654";
     private static final long TOKEN_VALIDITY = 1000L * 60L * 60L * 10L;
     private final PasswordEncoder passwordEncoder;
 
@@ -96,15 +98,15 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     }
 
     @Override
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        validateToken(token);
+    public Boolean isTokenValid(String token, UserDetails userDetails) {
+        isTokenValid(token);
         validateUserDetails(userDetails);
         final String username = getUsername(token);
         return (username.equals(userDetails.getUsername()));
     }
 
     @Override
-    public void validateToken(final String token) {
+    public void isTokenValid(final String token) {
         try {
             Jwts
                     .parserBuilder()
@@ -205,7 +207,7 @@ public class JwtUtilServiceImpl implements JwtUtilService {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY))
-                .signWith(getSignInKey())
+                .signWith(getSignInKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 

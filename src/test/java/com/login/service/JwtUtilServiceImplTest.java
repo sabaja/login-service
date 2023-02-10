@@ -102,29 +102,29 @@ class JwtUtilServiceImplTest {
 
     @Test
     void shouldValidateToken() {
-        Exception exception1 = assertThrows(io.jsonwebtoken.security.SignatureException.class, () -> jwtUtilService.validateToken(TOKEN, user));
+        Exception exception1 = assertThrows(io.jsonwebtoken.security.SignatureException.class, () -> jwtUtilService.isTokenValid(TOKEN, user));
         assertTrue(exception1.getMessage().contains("JWT validity cannot be asserted and should not be trusted"));
 
-        Exception exception2 = assertThrows(JwtTokenMalformedException.class, () -> jwtUtilService.validateToken("WrongToken", user));
+        Exception exception2 = assertThrows(JwtTokenMalformedException.class, () -> jwtUtilService.isTokenValid("WrongToken", user));
         assertTrue(exception2.getMessage().contains(INVALID_JWT_TOKEN_ERROR_MESSAGE));
 
-        Exception exception3 = assertThrows(JwtTokenMalformedException.class, () -> jwtUtilService.validateToken(invalidToken, user));
+        Exception exception3 = assertThrows(JwtTokenMalformedException.class, () -> jwtUtilService.isTokenValid(invalidToken, user));
         assertTrue(exception3.getMessage().contains(INVALID_JWT_TOKEN_ERROR_MESSAGE));
 
-        Exception exception4 = assertThrows(JwtTokenMissingException.class, () -> jwtUtilService.validateToken(Strings.EMPTY, user));
+        Exception exception4 = assertThrows(JwtTokenMissingException.class, () -> jwtUtilService.isTokenValid(Strings.EMPTY, user));
         assertTrue(exception4.getMessage().contains(JWT_CLAIMS_STRING_IS_EMPTY_ERROR_MESSAGE));
 
-        Exception exception5 = assertThrows(UserException.class, () -> jwtUtilService.validateToken(jwtToken, null));
+        Exception exception5 = assertThrows(UserException.class, () -> jwtUtilService.isTokenValid(jwtToken, null));
         assertTrue(exception5.getMessage().contains(USER_IS_NULL_ERROR_MESSAGE));
 
-//        Exception exception6 = assertThrows(JwtTokenMalformedException.class, () -> jwtUtilService.validateToken(UNSUPPORTED_TOKEN, user));
+//        Exception exception6 = assertThrows(JwtTokenMalformedException.class, () -> jwtUtilService.isTokenValid(UNSUPPORTED_TOKEN, user));
 //        assertTrue(exception6.getMessage().contains(UNSUPPORTED_JWT_TOKEN_ERROR_MESSAGE));
 
 
-        final Boolean isValidate1 = jwtUtilService.validateToken(jwtToken, user);
+        final Boolean isValidate1 = jwtUtilService.isTokenValid(jwtToken, user);
         assertTrue(isValidate1);
 
-        final Boolean isValidate2 = jwtUtilService.validateToken(jwtToken, new User("TOM", "NoPassword", List.of(new SimpleGrantedAuthority("USER_ROLE"))));
+        final Boolean isValidate2 = jwtUtilService.isTokenValid(jwtToken, new User("TOM", "NoPassword", List.of(new SimpleGrantedAuthority("USER_ROLE"))));
         assertFalse(isValidate2);
 
 

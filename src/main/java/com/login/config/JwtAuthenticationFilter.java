@@ -63,13 +63,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throw new JwtTokenMissingException("No JWT token found in the request headers");
         }
         final String jwtToken = authHeader.substring(PREFIX_HEADER_TOKEN.length() + 1);
-        jwtUtilService.validateToken(jwtToken);
+        jwtUtilService.isTokenValid(jwtToken);
         final String userId = jwtUtilService.getUsername(jwtToken);
 
         if (StringUtils.isNotBlank(userId)) {
             final UserDetails userDetails = jwtUtilService.loadUserByUsername(userId);
 
-            if (Boolean.TRUE.equals(jwtUtilService.validateToken(jwtToken, userDetails))) {
+            if (Boolean.TRUE.equals(jwtUtilService.isTokenValid(jwtToken, userDetails))) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 final SecurityContext context = SecurityContextHolder.getContext();
