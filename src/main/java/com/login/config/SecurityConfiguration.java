@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -44,7 +45,7 @@ class SecurityConfiguration {
      https://www.bezkoder.com/websecurityconfigureradapter-deprecated-spring-boot/
     */
 
-    
+
     /*
       Spring Boot crea automaticamente al volo i bean per l'applicazione. 
       Di conseguenza, la classe JwtAuthenticationFilter veniva inserita automaticamente nella catena di filtri da Spring Boot 
@@ -62,30 +63,36 @@ class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
-                .authorizeHttpRequests(authorize ->
-                        authorize
-                                .requestMatchers("/h2-console/**", "/index.html", "/", "/auth/signin", "/auth/signup").permitAll()
-                                .anyRequest().authenticated()
-                )
                 .csrf().disable()
                 .cors().disable()
                 .headers().frameOptions().disable().and()
                 .httpBasic().disable()
                 .formLogin().disable()
-                .logout().disable();
+                .logout().disable()
+//                .authorizeHttpRequests(authorize ->
+//                        authorize
+//                                .requestMatchers("/h2-console/**", "/index.html", "/", "/auth/signin", "/auth/signup").permitAll()
+//                                .anyRequest().authenticated()
+//                )
+                .authorizeHttpRequests()
+                .requestMatchers("/h2-console/**", "/index.html", "/", "/auth/signin", "/auth/signup").permitAll().anyRequest().authenticated()
+        ;
+
 
         http.httpBasic().disable().exceptionHandling()
-                .authenticationEntryPoint(authenticationEntryPoint).and().sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .and()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http.authenticationProvider(this.authenticationProvider());
+
         return http.build();
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
+    public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());

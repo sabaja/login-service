@@ -1,11 +1,11 @@
 package com.login.service;
 
-import com.login.controller.model.Request;
-import com.login.controller.model.Response;
+import com.login.controller.model.AuthenticationRequest;
+import com.login.controller.model.AuthenticationResponse;
 
 public interface AuthService {
 
-    Response generateJwtToken(Request request);
+    AuthenticationResponse generateJwtToken(AuthenticationRequest request);
 
-    void signup(Request request);
+    void signup(AuthenticationRequest request);
 }

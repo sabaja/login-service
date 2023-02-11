@@ -1,7 +1,7 @@
 package com.login.service;
 
-import com.login.controller.model.Request;
-import com.login.controller.model.Response;
+import com.login.controller.model.AuthenticationRequest;
+import com.login.controller.model.AuthenticationResponse;
 import com.login.exception.DisabledUserException;
 import com.login.exception.InvalidUserCredentialsException;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Override
-    public Response generateJwtToken(Request request) {
+    public AuthenticationResponse generateJwtToken(AuthenticationRequest request) {
         Authentication authentication = null;
         try {
             authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUserName(), request.getUserPwd()));
@@ -44,14 +44,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void signup(Request request) {
+    public void signup(AuthenticationRequest request) {
         jwtUtilService.saveUser(request);
     }
 
-    private Response createResponse(String token, List<String> roles) {
-        final Response response = new Response();
-        response.setToken(token);
-        response.setRoles(roles);
-        return response;
+    private AuthenticationResponse createResponse(String token, List<String> roles) {
+        final AuthenticationResponse authenticationResponse = new AuthenticationResponse();
+        authenticationResponse.setToken(token);
+        authenticationResponse.setRoles(roles);
+        return authenticationResponse;
     }
 }

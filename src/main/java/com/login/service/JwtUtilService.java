@@ -1,12 +1,13 @@
 package com.login.service;
 
-import com.login.controller.model.Request;
+import com.login.controller.model.AuthenticationRequest;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.function.Function;
 
 public interface JwtUtilService extends UserDetailsService {
@@ -17,9 +18,11 @@ public interface JwtUtilService extends UserDetailsService {
 
     String getUsername(String token);
 
-    String generateToken(UserDetails userDetails);
+    String generateToken(final UserDetails userDetails);
 
-    String generateToken(final Authentication authentication, UserDetails userDetails);
+    String generateToken(final Authentication authentication, final UserDetails userDetails);
+
+    String generateToken(final Authentication authentication, final UserDetails userDetails, final Date expiredDate);
 
     Boolean isTokenValid(String token, UserDetails userDetails);
 
@@ -27,5 +30,6 @@ public interface JwtUtilService extends UserDetailsService {
 
     boolean isAuthenticated();
 
-    void saveUser(Request request);
+    void saveUser(AuthenticationRequest request);
+
 }

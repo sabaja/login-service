@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.util.List;
 
 @Data
-public class Request implements Serializable {
+public class AuthenticationRequest implements Serializable {
     private String userName;
     private String userPwd;
     private List<String> roles;

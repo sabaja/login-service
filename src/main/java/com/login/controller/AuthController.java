@@ -1,11 +1,12 @@
 package com.login.controller;
 
-import com.login.controller.model.Request;
-import com.login.controller.model.Response;
+import com.login.controller.model.AuthenticationRequest;
+import com.login.controller.model.AuthenticationResponse;
 import com.login.service.AuthService;
 import com.login.service.JwtUtilService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
@@ -13,15 +14,15 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 
 @Slf4j
+@RequiredArgsConstructor
 @RestController
 @CrossOrigin(value = "http://localhost:4200")
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    private JwtUtilService jwtUtilService;
-    @Autowired
-    private AuthService authService;
+
+    private final JwtUtilService jwtUtilService;
+    private final AuthService authService;
 
     //    https://www.baeldung.com/spring-security-login-angular
     @GetMapping("/authenticated")
@@ -35,14 +36,14 @@ public class AuthController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<Response> signin(@RequestBody Request request) {
-        final Response response = this.authService.generateJwtToken(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<AuthenticationResponse> signin(@RequestBody AuthenticationRequest request) {
+        final AuthenticationResponse authenticationResponse = this.authService.generateJwtToken(request);
+        return ResponseEntity.ok(authenticationResponse);
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<Boolean> signup(@RequestBody Request request) {
+    public ResponseEntity<String> signup(@RequestBody AuthenticationRequest request) {
         this.authService.signup(request);
-        return ResponseEntity.ok(Boolean.TRUE);
+        return new ResponseEntity<>("User succesfully registered", HttpStatus.OK);
     }
 }

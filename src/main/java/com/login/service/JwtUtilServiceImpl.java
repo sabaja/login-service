@@ -1,6 +1,6 @@
 package com.login.service;
 
-import com.login.controller.model.Request;
+import com.login.controller.model.AuthenticationRequest;
 import com.login.entity.Role;
 import com.login.entity.User;
 import com.login.exception.JwtTokenMalformedException;
@@ -43,12 +43,13 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     public static final String USER_MUST_BE_NOT_EMPTY_ERROR_MESSAGE = "User must be not empty";
     public static final String USER_ALREADY_EXISTS_ERROR_MESSAGE = "User already exists";
     public static final String PASSWORD_CANNOT_BE_EMPTY_ERROR_MESSAGE = "Password cannot be empty";
-    public static final String REQUEST_IS_NULL_ERROR_MESSAGE = "Request is null";
+    public static final String REQUEST_IS_NULL_ERROR_MESSAGE = "AuthenticationRequest is null";
     public static final String ROLES_NOT_FOUND_ERROR_MESSAGE = "Roles not found";
 
     // https://www.allkeysgenerator.com/Random/Security-Encryption-Key-Generator.aspx 512-bit + hex
     private static final String JWT_SIGNING_KEY = "5A7134743777217A25432A462D4A404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970337336763979244226452948404D63516654";
     private static final long TOKEN_VALIDITY = 1000L * 60L * 60L * 10L;
+    private static final String DETAILS = " details:";
     private final PasswordEncoder passwordEncoder;
 
     private final UserRepository userRepository;
@@ -98,6 +99,13 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     }
 
     @Override
+    public String generateToken(Authentication authentication, UserDetails userDetails, Date expiredDate) {
+        final String principal = String.valueOf(authentication.getPrincipal());
+        final Claims claims = Jwts.claims().setSubject(principal);
+        return createToken(claims, userDetails.getUsername(), expiredDate);
+    }
+
+    @Override
     public Boolean isTokenValid(String token, UserDetails userDetails) {
         isTokenValid(token);
         validateUserDetails(userDetails);
@@ -114,13 +122,13 @@ public class JwtUtilServiceImpl implements JwtUtilService {
                     .build()
                     .parseClaimsJws(token);
         } catch (MalformedJwtException ex) {
-            throw new JwtTokenMalformedException(INVALID_JWT_TOKEN_ERROR_MESSAGE);
+            throw new JwtTokenMalformedException(INVALID_JWT_TOKEN_ERROR_MESSAGE + DETAILS + ex.getMessage());
         } catch (ExpiredJwtException ex) {
-            throw new JwtTokenMalformedException(EXPIRED_JWT_TOKEN_ERROR_MESSAGE);
+            throw new JwtTokenMalformedException(EXPIRED_JWT_TOKEN_ERROR_MESSAGE + DETAILS + ex.getMessage());
         } catch (UnsupportedJwtException ex) {
-            throw new JwtTokenMalformedException(UNSUPPORTED_JWT_TOKEN_ERROR_MESSAGE);
+            throw new JwtTokenMalformedException(UNSUPPORTED_JWT_TOKEN_ERROR_MESSAGE + DETAILS + ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            throw new JwtTokenMissingException(JWT_CLAIMS_STRING_IS_EMPTY_ERROR_MESSAGE);
+            throw new JwtTokenMissingException(JWT_CLAIMS_STRING_IS_EMPTY_ERROR_MESSAGE + DETAILS + ex.getMessage());
         }
     }
 
@@ -151,14 +159,14 @@ public class JwtUtilServiceImpl implements JwtUtilService {
 
     @Override
     @Transactional
-    public void saveUser(Request request) {
+    public void saveUser(AuthenticationRequest request) {
 
         if (request == null) {
             throw new UserException(REQUEST_IS_NULL_ERROR_MESSAGE);
         }
 
         final String userName = Optional.of(request)
-                .map(Request::getUserName)
+                .map(AuthenticationRequest::getUserName)
                 .filter(StringUtils::isNotBlank)
                 .orElseThrow(() -> new UserException(USER_MUST_BE_NOT_EMPTY_ERROR_MESSAGE));
 
@@ -202,11 +210,16 @@ public class JwtUtilServiceImpl implements JwtUtilService {
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
+        return createToken(claims, subject, new Date(System.currentTimeMillis() + TOKEN_VALIDITY));
+    }
+
+
+    private String createToken(Map<String, Object> claims, String subject, Date expiredDate) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY))
+                .setExpiration(expiredDate)
                 .signWith(getSignInKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
@@ -217,12 +230,12 @@ public class JwtUtilServiceImpl implements JwtUtilService {
                 .toLocalDateTime();
     }
 
-    private List<String> getRoles(Request request) {
+    private List<String> getRoles(AuthenticationRequest request) {
         return Optional.ofNullable(request.getRoles())
                 .orElseThrow(() -> new UserException(ROLES_NOT_FOUND_ERROR_MESSAGE));
     }
 
-    private String getPassword(Request request) {
+    private String getPassword(AuthenticationRequest request) {
         return Optional.ofNullable(request.getUserPwd())
                 .filter(StringUtils::isNotBlank)
                 .orElseThrow(() -> new UserException(PASSWORD_CANNOT_BE_EMPTY_ERROR_MESSAGE));

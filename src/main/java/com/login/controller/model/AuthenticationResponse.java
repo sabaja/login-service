@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class Response {
+public class AuthenticationResponse {
     private String token;
     private List<String> roles;
 }

@@ -1,6 +1,6 @@
 package com.login.service;
 
-import com.login.controller.model.Request;
+import com.login.controller.model.AuthenticationRequest;
 import com.login.entity.Role;
 import com.login.exception.JwtTokenMalformedException;
 import com.login.exception.JwtTokenMissingException;
@@ -50,6 +50,8 @@ class JwtUtilServiceImplTest {
 
     private UserRepository userRepository;
 
+    private String expriredToken;
+
     @BeforeEach
     public void setUp() {
         this.user = createUserDetails();
@@ -59,6 +61,7 @@ class JwtUtilServiceImplTest {
         this.userRepository = mock(UserRepository.class);
         this.jwtUtilService = new JwtUtilServiceImpl(this.passwordEncoder, this.userRepository);
         this.jwtToken = jwtUtilService.generateToken(authentication, user);
+        this.expriredToken = jwtUtilService.generateToken(authentication, user, new Date(System.currentTimeMillis() - 10000L));
         SecurityContextHolder.clearContext();
     }
 
@@ -116,6 +119,9 @@ class JwtUtilServiceImplTest {
 
         Exception exception5 = assertThrows(UserException.class, () -> jwtUtilService.isTokenValid(jwtToken, null));
         assertTrue(exception5.getMessage().contains(USER_IS_NULL_ERROR_MESSAGE));
+
+        Exception exception6 = assertThrows(JwtTokenMalformedException.class, () -> jwtUtilService.isTokenValid(expriredToken, user));
+        assertTrue(exception6.getMessage().contains(EXPIRED_JWT_TOKEN_ERROR_MESSAGE));
 
 //        Exception exception6 = assertThrows(JwtTokenMalformedException.class, () -> jwtUtilService.isTokenValid(UNSUPPORTED_TOKEN, user));
 //        assertTrue(exception6.getMessage().contains(UNSUPPORTED_JWT_TOKEN_ERROR_MESSAGE));
@@ -240,8 +246,8 @@ class JwtUtilServiceImplTest {
     }
 
     @NotNull
-    private Request createRequest() {
-        Request request = new Request();
+    private AuthenticationRequest createRequest() {
+        AuthenticationRequest request = new AuthenticationRequest();
         request.setUserName(USER);
         request.setUserPwd(PASS);
         request.setRoles(List.of("USER_ROLE"));
