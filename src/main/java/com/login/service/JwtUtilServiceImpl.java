@@ -1,11 +1,11 @@
 package com.login.service;
 
-import com.login.controller.model.AuthenticationRequest;
 import com.login.entity.Role;
 import com.login.entity.User;
 import com.login.exception.JwtTokenMalformedException;
 import com.login.exception.JwtTokenMissingException;
 import com.login.exception.UserException;
+import com.login.model.AuthenticationRequest;
 import com.login.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

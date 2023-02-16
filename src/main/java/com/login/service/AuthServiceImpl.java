@@ -1,9 +1,9 @@
 package com.login.service;
 
-import com.login.controller.model.AuthenticationRequest;
-import com.login.controller.model.AuthenticationResponse;
 import com.login.exception.DisabledUserException;
 import com.login.exception.InvalidUserCredentialsException;
+import com.login.model.AuthenticationRequest;
+import com.login.model.AuthenticationResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;

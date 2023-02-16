@@ -45,22 +45,6 @@ class SecurityConfiguration {
      https://www.bezkoder.com/websecurityconfigureradapter-deprecated-spring-boot/
     */
 
-
-    /*
-      Spring Boot crea automaticamente al volo i bean per l'applicazione. 
-      Di conseguenza, la classe JwtAuthenticationFilter veniva inserita automaticamente nella catena di filtri da Spring Boot 
-      e veniva inclusa anche nella catena di filtri di sicurezza quando veniva dichiarata nella configurazione di Spring Security.
-      Sebbene gli endpoint /signin e /signup fossero esclusi nella configurazione di Spring Security, 
-      ciò non era sufficiente per impedire l'applicazione del filtro nel contesto di Spring Boot stesso.
-      La soluzione era configurare un bean che ne impedisse esplicitamente l'aggiunta da parte di Spring Boot.
-    */
-    @Bean
-    public RegistrationBean jwtAuthFilterRegister(JwtAuthenticationFilter filter) {
-        FilterRegistrationBean<JwtAuthenticationFilter> registrationBean = new FilterRegistrationBean<>(filter);
-        registrationBean.setEnabled(false);
-        return registrationBean;
-    }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -79,7 +63,6 @@ class SecurityConfiguration {
                 .requestMatchers("/h2-console/**", "/index.html", "/", "/auth/signin", "/auth/signup").permitAll().anyRequest().authenticated()
         ;
 
-
         http.httpBasic().disable().exceptionHandling()
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .and()
@@ -89,6 +72,21 @@ class SecurityConfiguration {
         http.authenticationProvider(this.authenticationProvider());
 
         return http.build();
+    }
+
+    /*
+      Spring Boot crea automaticamente al volo i bean per l'applicazione.
+      Di conseguenza, la classe JwtAuthenticationFilter veniva inserita automaticamente nella catena di filtri da Spring Boot
+      e veniva inclusa anche nella catena di filtri di sicurezza quando veniva dichiarata nella configurazione di Spring Security.
+      Sebbene gli endpoint /signin e /signup fossero esclusi nella configurazione di Spring Security,
+      ciò non era sufficiente per impedire l'applicazione del filtro nel contesto di Spring Boot stesso.
+      La soluzione era configurare un bean che ne impedisse esplicitamente l'aggiunta da parte di Spring Boot.
+    */
+    @Bean
+    public RegistrationBean jwtAuthFilterRegister(JwtAuthenticationFilter filter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registrationBean = new FilterRegistrationBean<>(filter);
+        registrationBean.setEnabled(false);
+        return registrationBean;
     }
 
     @Bean

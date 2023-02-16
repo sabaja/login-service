@@ -1,6 +1,6 @@
 package com.login.service;
 
-import com.login.controller.model.AuthenticationRequest;
+import com.login.model.AuthenticationRequest;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;

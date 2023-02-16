@@ -1,10 +1,10 @@
 package com.login.service;
 
-import com.login.controller.model.AuthenticationRequest;
 import com.login.entity.Role;
 import com.login.exception.JwtTokenMalformedException;
 import com.login.exception.JwtTokenMissingException;
 import com.login.exception.UserException;
+import com.login.model.AuthenticationRequest;
 import com.login.repository.UserRepository;
 import com.sun.istack.NotNull;
 import org.apache.commons.codec.digest.HmacUtils;

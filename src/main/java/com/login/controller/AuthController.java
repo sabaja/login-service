@@ -1,9 +1,10 @@
 package com.login.controller;
 
-import com.login.controller.model.AuthenticationRequest;
-import com.login.controller.model.AuthenticationResponse;
+import com.login.model.AuthenticationRequest;
+import com.login.model.AuthenticationResponse;
 import com.login.service.AuthService;
 import com.login.service.JwtUtilService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -41,8 +42,9 @@ public class AuthController {
         return ResponseEntity.ok(authenticationResponse);
     }
 
+    //    https://www.javaguides.net/2021/04/spring-boot-dto-validation-example.html
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody AuthenticationRequest request) {
+    public ResponseEntity<String> signup(@Valid @RequestBody AuthenticationRequest request) {
         this.authService.signup(request);
         return new ResponseEntity<>("User succesfully registered", HttpStatus.OK);
     }
