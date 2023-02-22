@@ -24,14 +24,14 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Override
-    public AuthenticationResponse generateJwtToken(AuthenticationRequest request) {
-        Authentication authentication = null;
+    public AuthenticationResponse generateJwtToken(AuthenticationRequest request) throws InvalidUserCredentialsException {
+        Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUserName(), request.getUserPwd()));
         } catch (DisabledException e) {
             throw new DisabledUserException("User Inactive");
         } catch (BadCredentialsException e) {
-            throw new InvalidUserCredentialsException("Invalid Credentials");
+            throw new InvalidUserCredentialsException("Invalid Credentials " + e.getMessage());
         }
 
         final UserDetails userDetails = jwtUtilService.loadUserByUsername(request.getUserName());
