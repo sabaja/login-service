@@ -8,6 +8,6 @@ public class JwtTokenMissingException extends ResponseStatusException {
     private static final long serialVersionUID = 1L;
 
     public JwtTokenMissingException(String msg) {
-        super(HttpStatus.UNAUTHORIZED, msg);
+        super(HttpStatus.BAD_REQUEST, msg);
     }
 }

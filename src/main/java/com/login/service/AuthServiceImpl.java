@@ -31,7 +31,7 @@ public class AuthServiceImpl implements AuthService {
         } catch (DisabledException e) {
             throw new DisabledUserException("User Inactive");
         } catch (BadCredentialsException e) {
-            throw new InvalidUserCredentialsException("Invalid Credentials " + e.getMessage());
+            throw new InvalidUserCredentialsException("Invalid Credentials: " + e.getMessage());
         }
 
         final UserDetails userDetails = jwtUtilService.loadUserByUsername(request.getUserName());
